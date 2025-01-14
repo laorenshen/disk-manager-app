@@ -1,0 +1,59 @@
+下载代码到本地，并解压缩。
+
+代码上传到服务器的某个目录， 例如 `/home/laorenshen/disk-manager-app`
+
+ssh终端工具：
+
+sudo -i
+
+cd /home/laorenshen/disk-manager-app
+
+安装运行所需的环境：
+1：
+	sudo apt-get update
+	检查运行环境：
+	nodejs -v
+	如果没有，安装
+	sudo apt-get install nodejs
+2：
+	检查运行环境：
+	npm -v
+	如果没有，安装
+	sudo apt-get install npm
+	
+3：	
+	切换国内阿里源：
+	npm config set registry https://registry.npmmirror.com/
+	安装express
+	sudo npm install express
+
+注意：如果安装无进度，可以切换国内阿里源，再重新安装。
+
+4、安装开启自动启动管理工具pm2
+	sudo npm install -g pm2
+	启动应用：
+	pm2 start app.js -n "disk-manager"
+	保存应用：
+	pm2 save
+	设置开机自启动：
+	pm2 startup
+	查看 pm2 应用状态：
+	pm2 status
+	
+备注：
+	其他 pm2 命令:
+        pm2 status: 查看 pm2 应用状态
+        pm2 stop disk-manager: 停止应用。
+        pm2 restart disk-manager: 重启应用。
+        pm2 delete disk-manager: 删除应用。
+        pm2 logs disk-manager: 查看应用日志。	
+	
+
+访问你的应用： 在局域网内的其他设备上，通过浏览器访问你的服务器的内网 IP 地址，并加上端口号 5000，例如 http://192.168.1.100:5000。
+
+
+	
+	
+	
+
+

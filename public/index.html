@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Disk Manager</title>
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: left;
+        }
+        button {
+            margin-left: 5px;
+            cursor: pointer;
+        }
+        hr {
+          margin-top: 20px;
+          margin-bottom: 20px;
+          border: 0;
+          border-top: 1px solid #eee;
+        }
+         .fix-info {
+            margin-top: 20px;
+             padding: 15px;
+            background-color: #f9f9f9;
+            border: 1px solid #eee;
+            border-radius: 5px;
+        }
+        .fix-info h3 {
+          margin-bottom: 10px;
+           font-size: 1.2em;
+         }
+        .fix-info p {
+           line-height: 1.6;
+          margin-bottom: 10px;
+          }
+       .fix-info ul {
+          margin-left: 20px;
+          margin-bottom: 10px;
+       }
+    </style>
+</head>
+<body>
+    <h1>laorenshen--NAS--工具箱 V1.0:</h1>
+    <table id="partitionTable">
+        <thead>
+            <tr>
+                <th>硬盘扇区</th>
+                <th>容量</th>
+                <th>格式</th>
+                <th>挂载点</th>
+                <th>执行</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Partition data will be inserted here -->
+        </tbody>
+    </table>
+    <hr>
+    <div class="fix-info">
+        <h3>修复只读</h3>
+         <p> 针对挂载后ntfs硬盘只能读，不能写入。(造成这种情况是Windows没有完全关机，解决方案：)</p>
+         <p>
+         彻底关闭 Windows：
+         </p>
+         <ul>
+          <li>禁用快速启动： 你需要在 Windows 的电源设置中禁用“快速启动”功能。
+             <br><br>
+              <ul>
+                <li> 打开“控制面板”</li>
+                 <li> 选择“硬件和声音”</li>
+                  <li>选择“电源选项”</li>
+                    <li>点击“选择电源按钮的功能”</li>
+                      <li>点击“更改当前不可用的设置”</li>
+                      <li>取消勾选“启用快速启动”</li>
+                      <li>点击“保存修改”</li>
+             </ul>
+         </li>
+          <li> 完全关机： 在禁用快速启动后，你需要完全关闭 Windows，而不是让它进入睡眠或休眠状态。
+         </li>
+        </ul>
+
+    </div>
+    <script>
+        async function fetchPartitions() {
+            const response = await fetch('/partitions');
+            const partitions = await response.json();
+            if (response.ok) {
+                const tableBody = document.querySelector('#partitionTable tbody');
+                tableBody.innerHTML = ''; // Clear existing content
+                partitions.forEach(partition => {
+                  const row = document.createElement('tr');
+                  row.innerHTML = `
+                    <td>${partition.name}</td>
+                    <td>${partition.size}</td>
+                    <td>${partition.fstype}</td>
+                    <td>${partition.mountpoint}</td>
+                    <td>
+                         <input type="text" id="mountpoint-${partition.name}" placeholder="/media/laorenshen/ST2T">
+                        <button onclick="mountPartition('${partition.name}', document.getElementById('mountpoint-${partition.name}').value)">挂载</button>
+                        <button onclick="umountPartition('${partition.name}')">卸载</button>
+                        <button onclick="fixPartition('${partition.name}')">修复只读</button>
+                         <input type="text" id="sharename-${partition.name}" placeholder="sharename" value="${partition.shareName}">
+                        <button onclick="smbSharePartition('${partition.name}', document.getElementById('sharename-${partition.name}').value)">SMB共享</button>
+                    </td>
+                    `;
+                  tableBody.appendChild(row);
+                });
+              }else{
+                  alert(`Error fetching partitions: ${partitions.error}`);
+                }
+        }
+
+        async function mountPartition(partition, mountpoint) {
+          const response = await fetch('/mount', {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({partition, mountpoint})
+          });
+          const result = await response.text();
+           alert(result);
+           fetchPartitions();
+
+        }
+
+        async function umountPartition(partition) {
+          const response = await fetch('/umount', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({partition})
+           });
+          const result = await response.text();
+            alert(result);
+            fetchPartitions();
+
+        }
+
+         async function fixPartition(partition) {
+          try {
+                const response = await fetch('/fix', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({partition})
+                });
+                const text = await response.text();
+                 alert(text);
+            } catch (error) {
+                console.error("Error during fetch:", error);
+                alert(`An error occurred during the fetch request: ${error.message}`);
+            }
+        }
+
+      async function smbSharePartition(partition, shareName) {
+        try {
+            const response = await fetch('/smbshare', {
+                 method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                     },
+                body: JSON.stringify({partition, shareName})
+           });
+           const result = await response.text();
+           alert(result);
+        } catch (error) {
+              console.error("Error during smb share:", error);
+               alert(`An error occurred during smb share request: ${error.message}`);
+        }
+      }
+        // Initial load
+        fetchPartitions();
+    </script>
+</body>
+</html>
