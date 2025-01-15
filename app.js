@@ -30,19 +30,33 @@ app.get('/partitions', async (req, res) => {
     try {
         const output = await executeCommand('lsblk -o NAME,SIZE,FSTYPE,MOUNTPOINT');
         const lines = output.split('\n').slice(1); // Skip header
-        let partitions = lines.map(line => {
+        let partitions = lines.map(async line => { // 将 map 改为 async
             const parts = line.split(/\s+/);
             if (parts.length >= 4) {
                  // 使用正则表达式去除 "├─" 等多余字符
                  const name = parts[0].replace(/^[├│└─]+/g, '');
-                  return { name: name, size: parts[1], fstype: parts[2], mountpoint: parts[3], shareName: '' };
+                  const partitionInfo =  { name: name, size: parts[1], fstype: parts[2], mountpoint: parts[3], shareName: '', usage: 0 };
+                   // 获取磁盘使用率
+                  if(partitionInfo.mountpoint && partitionInfo.mountpoint !== '[SWAP]'){
+                      try {
+                          const dfOutput = await executeCommand(`df -h | grep ${partitionInfo.mountpoint}`);
+                           const dfParts = dfOutput.trim().split(/\s+/);
+                          if (dfParts.length >= 6) {
+                              const usage = parseInt(dfParts[4].replace('%', ''));
+                              partitionInfo.usage = usage;
+                          }
+                       }catch (e) {
+                            console.log(`Failed to get usage for ${partitionInfo.name}: ${e}`);
+                       }
+                    }
+                 return  partitionInfo;
             }
         }).filter(part => part);
-
+        // 并发处理所有分区
+       partitions = await Promise.all(partitions);
 
         // Filter partitions to only include NTFS and ext4
-        const filteredPartitions = partitions.filter(part => part.fstype === 'ntfs' || part.fstype === 'ext4');
-
+        const filteredPartitions = partitions.filter(part => part && (part.fstype === 'ntfs' || part.fstype === 'ext4'));
 
         // 读取 SMB 配置文件并添加 shareName
        const shareConfFile = '/etc/samba/users/laorenshen.share.conf';

@@ -41,15 +41,41 @@
           margin-left: 20px;
           margin-bottom: 10px;
        }
+       .progress-container {
+            width: 100px;
+            height: 10px;
+            background-color: #f0f0f0;
+            border-radius: 5px;
+            display: inline-block;
+            margin-left: 5px; /* 进度条和文字之间留出间距 */
+
+        }
+        .progress-bar {
+            height: 10px;
+            background-color: #4caf50; /* 默认绿色 */
+            border-radius: 5px;
+        }
+         .capacity-container{
+             display: flex;
+             justify-content: space-between; /* 将空间分配在中间 */
+              align-items: center; /* 垂直居中对齐 */
+         }
+          .progress-wrapper {
+             display: inline-flex; /* 内联弹性布局，让其与磁盘容量在一行显示 */
+           align-items: center;  /* 垂直居中对齐 */
+         }
+         .progress-wrapper span {
+           margin-left: 5px;
+         }
     </style>
 </head>
 <body>
-    <h1>laorenshen--NAS--工具箱 V1.0:</h1>
+    <h1>laorenshen--NAS--工具箱 V2.0:</h1>
     <table id="partitionTable">
         <thead>
             <tr>
                 <th>硬盘扇区</th>
-                <th>容量</th>
+                <th>磁盘容量</th>
                 <th>格式</th>
                 <th>挂载点</th>
                 <th>执行</th>
@@ -92,22 +118,36 @@
                 const tableBody = document.querySelector('#partitionTable tbody');
                 tableBody.innerHTML = ''; // Clear existing content
                 partitions.forEach(partition => {
-                  const row = document.createElement('tr');
-                  row.innerHTML = `
-                    <td>${partition.name}</td>
-                    <td>${partition.size}</td>
-                    <td>${partition.fstype}</td>
-                    <td>${partition.mountpoint}</td>
-                    <td>
-                         <input type="text" id="mountpoint-${partition.name}" placeholder="/media/laorenshen/ST2T">
-                        <button onclick="mountPartition('${partition.name}', document.getElementById('mountpoint-${partition.name}').value)">挂载</button>
-                        <button onclick="umountPartition('${partition.name}')">卸载</button>
-                        <button onclick="fixPartition('${partition.name}')">修复只读</button>
-                         <input type="text" id="sharename-${partition.name}" placeholder="sharename" value="${partition.shareName}">
-                        <button onclick="smbSharePartition('${partition.name}', document.getElementById('sharename-${partition.name}').value)">SMB共享</button>
-                    </td>
+                    const row = document.createElement('tr');
+                    const progress =  `
+                        <div class="progress-wrapper">
+                           <div class="progress-container">
+                             <div class="progress-bar" style="width: ${partition.usage}%; ${partition.usage > 80 ? 'background-color: red;' : ''}"></div>
+                           </div>
+                           <span>${partition.usage}%</span>
+                       </div>
                     `;
-                  tableBody.appendChild(row);
+
+                    row.innerHTML = `
+                        <td>${partition.name}</td>
+                        <td>
+                             <div class="capacity-container">
+                                 <span>${partition.size}</span>
+                                   ${progress}
+                              </div>
+                         </td>
+                        <td>${partition.fstype}</td>
+                        <td>${partition.mountpoint}</td>
+                        <td>
+                            <input type="text" id="mountpoint-${partition.name}" placeholder="/media/laorenshen/ST2T">
+                            <button onclick="mountPartition('${partition.name}', document.getElementById('mountpoint-${partition.name}').value)">挂载</button>
+                            <button onclick="umountPartition('${partition.name}')">卸载</button>
+                            <button onclick="fixPartition('${partition.name}')">修复只读</button>
+                             <input type="text" id="sharename-${partition.name}" placeholder="sharename" value="${partition.shareName}">
+                            <button onclick="smbSharePartition('${partition.name}', document.getElementById('sharename-${partition.name}').value)">SMB共享</button>
+                        </td>
+                        `;
+                    tableBody.appendChild(row);
                 });
               }else{
                   alert(`Error fetching partitions: ${partitions.error}`);

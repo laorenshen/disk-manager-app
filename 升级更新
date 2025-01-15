@@ -1,0 +1,23 @@
+ssh终端工具：
+
+sudo -i
+
+cd /home/laorenshen/disk-manager-app
+
+
+
+1、停止pm2运行：
+
+pm2 stop disk-manager
+
+2、删除飞牛上/home/laorenshen/disk-manager-app文件夹
+
+3、下载新版工具，上传到飞牛/home/laorenshen/disk-manager-app文件夹
+
+4、启动pm2：
+pm2 restart disk-manager
+
+5、查看 pm2 应用状态：
+pm2 status
+
+访问你的应用： 在局域网内的其他设备上，通过浏览器访问你的服务器的内网 IP 地址，并加上端口号 5000，例如 http://192.168.1.100:5000。
