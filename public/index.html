@@ -70,7 +70,7 @@
     </style>
 </head>
 <body>
-    <h1>laorenshen--NAS--工具箱 V2.0:</h1>
+    <h1>laorenshen--NAS--工具箱 V3.0:</h1>
     <table id="partitionTable">
         <thead>
             <tr>
@@ -78,7 +78,8 @@
                 <th>磁盘容量</th>
                 <th>格式</th>
                 <th>挂载点</th>
-                <th>执行</th>
+                <th>挂载</th>
+                <th>共享设置</th>
             </tr>
         </thead>
         <tbody>
@@ -143,8 +144,13 @@
                             <button onclick="mountPartition('${partition.name}', document.getElementById('mountpoint-${partition.name}').value)">挂载</button>
                             <button onclick="umountPartition('${partition.name}')">卸载</button>
                             <button onclick="fixPartition('${partition.name}')">修复只读</button>
+
+                        </td>
+                          <td>
+                             <input type="checkbox" id="readonly-${partition.name}" ${partition.readonly ? 'checked' : ''}>
+                              <label for="readonly-${partition.name}">只读</label>
                              <input type="text" id="sharename-${partition.name}" placeholder="sharename" value="${partition.shareName}">
-                            <button onclick="smbSharePartition('${partition.name}', document.getElementById('sharename-${partition.name}').value)">SMB共享</button>
+                              <button onclick="smbSharePartition('${partition.name}', document.getElementById('sharename-${partition.name}').value, document.getElementById('readonly-${partition.name}').checked)">SMB共享</button>
                         </td>
                         `;
                     tableBody.appendChild(row);
@@ -199,14 +205,14 @@
             }
         }
 
-      async function smbSharePartition(partition, shareName) {
+      async function smbSharePartition(partition, shareName, readonly) {
         try {
             const response = await fetch('/smbshare', {
                  method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                      },
-                body: JSON.stringify({partition, shareName})
+                body: JSON.stringify({partition, shareName, readonly})
            });
            const result = await response.text();
            alert(result);
@@ -218,5 +224,8 @@
         // Initial load
         fetchPartitions();
     </script>
+    <div style="margin-top:20px;text-align: center;">
+    本开源项目地址：<a href="https://github.com/laorenshen/disk-manager-app" target="_blank">https://github.com/laorenshen/disk-manager-app</a>
+</div>
 </body>
 </html>
